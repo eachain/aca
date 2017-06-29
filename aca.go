@@ -20,8 +20,8 @@ func New() *ACA {
 	return &ACA{root: &node{}, nodeCount: 1}
 }
 
-// Add adds a new word to aca,
-// after Add, and before Find,
+// Add adds a new word to aca.
+// After Add, and before Find,
 // MUST Build.
 func (a *ACA) Add(word string) {
 	n := a.root
@@ -36,6 +36,42 @@ func (a *ACA) Add(word string) {
 		n = n.next[r]
 	}
 	n.wordLength = len(word)
+}
+
+// Del delete a word from aca.
+// After Del, and before Find,
+// MUST Build.
+func (a *ACA) Del(word string) {
+	rs := []rune(word)
+	stack := make([]*node, len(rs))
+	n := a.root
+
+	for i, r := range rs {
+		if n.next[r] == nil {
+			return
+		}
+		stack[i] = n
+		n = n.next[r]
+	}
+
+	// if it is NOT the leaf node
+	if len(n.next) > 0 {
+		n.wordLength = 0
+		return
+	}
+
+	// if it is the leaf node
+	for i := len(rs) - 1; i >= 0; i-- {
+		stack[i].next[rs[i]].next = nil
+		stack[i].next[rs[i]].fail = nil
+
+		delete(stack[i].next, rs[i])
+		a.nodeCount--
+		if len(stack[i].next) > 0 ||
+			stack[i].wordLength > 0 {
+			return
+		}
+	}
 }
 
 // Build builds the fail pointer.
@@ -54,7 +90,8 @@ func (a *ACA) Build() {
 
 			p := n.fail
 			for p != nil {
-				// ATTENTION: nil map cannot be writen, but CAN BE READ!!!
+				// ATTENTION: nil map cannot be writen
+				// but CAN BE READ!!!
 				if p.next[r] != nil {
 					c.fail = p.next[r]
 					break

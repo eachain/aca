@@ -51,7 +51,8 @@ func ReplaceAll(a *aca.ACA, s string, new rune) string {
 	buf := &bytes.Buffer{}
 	for _, b := range UnionBlocks(a.Blocks(s)) {
 		buf.WriteString(s[now:b.Start])
-		buf.WriteString(string(tmp[:utf8.RuneCountInString(s[b.Start:b.End])]))
+		cnt := utf8.RuneCountInString(s[b.Start:b.End])
+		buf.WriteString(string(tmp[:cnt]))
 		now = b.End
 	}
 	if now < len(s) {
@@ -66,12 +67,15 @@ func ExampleSensitives() {
 	a.Add("shit")
 	a.Add("bitch")
 	a.Add("艹")
+	a.Add("就是")
+	a.Add("傻X")
 	a.Add("他奶奶的")
+	a.Del("就是")
 	a.Build()
 
-	s := "我fuck你shit up, 艹他奶奶的个球嘞, you这个bitch!"
-	fmt.Println(a.Find(s))                // prints: [fuck shit 艹 他奶奶的 bitch]
-	fmt.Println(a.Blocks(s))              // prints: [{3 7} {10 14} {19 22} {22 34} {54 59}]
-	fmt.Println(UnionBlocks(a.Blocks(s))) // prints: [{3 7} {10 14} {19 34} {54 59}]
-	fmt.Println(ReplaceAll(a, s, '*'))    // prints: 我****你**** up, *****个球嘞, you这个*****!
+	s := "我fuck你shit up, 艹他奶奶的个球嘞, you这个bitch，就是个傻X!"
+	fmt.Println(a.Find(s))                // prints: [fuck shit 艹 他奶奶的 bitch 傻X]
+	fmt.Println(a.Blocks(s))              // prints: [{3 7} {10 14} {19 22} {22 34} {54 59} {71 75}]
+	fmt.Println(UnionBlocks(a.Blocks(s))) // prints: [{3 7} {10 14} {19 34} {54 59} {71 75}]
+	fmt.Println(ReplaceAll(a, s, '*'))    // prints: 我****你**** up, *****个球嘞, you这个*****，就是个**!
 }

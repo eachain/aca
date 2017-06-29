@@ -15,12 +15,44 @@ func TestEmpty(t *testing.T) {
 	}
 }
 
+func TestDelLeaf(t *testing.T) {
+	a := aca.New()
+	a.Add("abcd")
+	a.Add("abcdefg")
+	a.Add("abcdexy")
+	a.Del("abcdefg")
+	a.Build()
+
+	s := "abcdefgabcdexy"
+	if len(a.Find(s)) != 3 { // [abcd, abcd, abcdexy]
+		t.Errorf("aca find after del result: %v", a.Find(s))
+	}
+}
+
+func TestDelMid(t *testing.T) {
+	a := aca.New()
+	a.Add("abcd")
+	a.Add("abcdefg")
+	a.Add("abcdxyz")
+	a.Add("abcdemn")
+	a.Del("abcd")
+	a.Build()
+
+	s := "abcdefg"
+	if len(a.Find(s)) != 1 { // [abcdefg]
+		t.Errorf("aca find after del result: %v", a.Find(s))
+	}
+}
+
 func TestFind(t *testing.T) {
 	a := aca.New()
 	a.Add("say")
+	a.Add("erh")
 	a.Add("she")
 	a.Add("shr")
+	a.Del("erh")
 	a.Add("he")
+	a.Del("shr")
 	a.Add("her")
 	a.Build()
 

@@ -11,15 +11,15 @@ Golang implementation of Aho-Corasick algorithm.
 
 ### 1. Find out all words appear in a sentence.(查找所有出现过的词)
 
-***REMEBER: Your call sequence should always be: "Add", "Build", and then "Find".***
+***REMEBER: Your call sequence should always be: "Add/Del", "Build", and then "Find".***
 
-***注意: 你应该永远以"Add", "Build", "Find"的顺序调用。***
+***注意: 你应该永远以"Add/Del", "Build", "Find"的顺序调用。***
 
 **If you call "Find" before "Build", it will panic.**
 
 **如果你在"Build"之前调用了"Find"，你的程序会挂逼。**
 
-```
+```go
 package main
 
 import (
@@ -31,9 +31,12 @@ import (
 func main() {
 	a := aca.New()
 	a.Add("say")
+	a.Add("erh")
 	a.Add("she")
 	a.Add("shr")
+	a.Del("erh")
 	a.Add("he")
+	a.Del("shr")
 	a.Add("her")
 	a.Build()
 
@@ -46,7 +49,7 @@ func main() {
 
 For example:
 
-```
+```go
 func Uniq(words []string) []string {
 	sort.Strings(words)
 	n := 0
@@ -64,16 +67,7 @@ func Uniq(words []string) []string {
 
 For example:
 
-```
-package main
-
-import (
-	"fmt"
-	"sync"
-
-	"github.com/eachain/aca"
-)
-
+```go
 type Filter struct {
 	a   *aca.ACA
 	mtx sync.RWMutex
@@ -89,24 +83,18 @@ func (f *Filter) AddAndBuild(word string) {
 	f.mtx.Unlock()
 }
 
+func (f *Filter) DelAndBuild(word string) {
+	f.mtx.Lock()
+	f.a.Del(word)
+	f.a.Build()
+	f.mtx.Unlock()
+}
+
 func (f *Filter) Find(s string) []string {
 	f.mtx.RLock()
 	words := f.a.Find(s)
 	f.mtx.RUnlock()
 	return words
-}
-
-func main() {
-	var f Filter
-	var s = "yasherhs"
-	f.AddAndBuild("say")
-	f.AddAndBuild("she")
-	fmt.Println(f.Find(s)) // prints: [she]
-	f.AddAndBuild("shr")
-	f.AddAndBuild("he")
-	fmt.Println(f.Find(s)) // prints: [she he]
-	f.AddAndBuild("her")
-	fmt.Println(f.Find(s)) // prints: [she he her]
 }
 ```
 
@@ -114,7 +102,7 @@ func main() {
 
 *如果你只会build一次，之后只find，那它本身是并发读安全的。*
 
-```
+```go
 package main
 
 import (
