@@ -17,7 +17,7 @@ type ACA struct {
 
 // New returns an empty aca.
 func New() *ACA {
-	return &ACA{root: &node{}}
+	return &ACA{root: &node{}, nodeCount: 1}
 }
 
 // Add adds a new word to aca,
