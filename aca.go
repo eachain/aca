@@ -78,8 +78,7 @@ func (a *ACA) Del(word string) {
 // It MUST be called before Find.
 func (a *ACA) Build() {
 	// allocate enough memory as a queue
-	q := make([]*node, 0, a.nodeCount)
-	q = append(q, a.root)
+	q := append(make([]*node, 0, a.nodeCount), a.root)
 
 	for len(q) > 0 {
 		n := q[0]
@@ -101,6 +100,15 @@ func (a *ACA) Build() {
 			if p == nil {
 				c.fail = a.root
 			}
+		}
+
+		// make it quick fail
+		if n.fail != nil {
+			fail := n.fail
+			for fail != a.root && fail.wordLength == 0 {
+				fail = fail.fail
+			}
+			n.fail = fail
 		}
 	}
 }

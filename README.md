@@ -3,9 +3,74 @@ Golang implementation of Aho-Corasick algorithm.
 
 * Aho-Corasick Wikipedia : [Aho-Corasick algorithm wiki](https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm)
 
+Aho-Corasick automation，1975年产生于贝尔实验室，著名的多模匹配算法。
+
 # Prerequisite
 
 * Golang 1.7+
+
+# Preview
+
+Debug mode, you can print the hole trie (with color).
+
+调试模式下，可以把整棵树(带颜色地)打印出来.
+
+```go
+a := aca.New()
+a.Add("abcdefg")
+a.Add("abcd")
+a.Add("bcdefg")
+a.Add("cde")
+a.Add("cdefg")
+a.Add("defg")
+a.Add("efg")
+a.Add("fg")
+a.Add("g")
+a.Add("abcdeg")
+a.Build()
+a.Debug() // not exported
+```
+
+Then, this is the trie(after optimised):
+
+然后, 这是(优化后的)树:
+
+```
+.[0](fail->0)
+├── a[1](fail->0)
+|   └── b[2](fail->0)
+|       └── c[3](fail->0)
+|           └── d[4](fail->0) √
+|               └── e[5](fail->17)
+|                   ├── f[6](fail->0)
+|                   |   └── g[7](fail->14) √
+|                   └── g[8](fail->29) √
+├── b[9](fail->0)
+|   └── c[10](fail->0)
+|       └── d[11](fail->0)
+|           └── e[12](fail->17)
+|               └── f[13](fail->0)
+|                   └── g[14](fail->19) √
+├── c[15](fail->0)
+|   └── d[16](fail->0)
+|       └── e[17](fail->0) √
+|           └── f[18](fail->0)
+|               └── g[19](fail->23) √
+├── d[20](fail->0)
+|   └── e[21](fail->0)
+|       └── f[22](fail->0)
+|           └── g[23](fail->26) √
+├── e[24](fail->0)
+|   └── f[25](fail->0)
+|       └── g[26](fail->28) √
+├── f[27](fail->0)
+|   └── g[28](fail->29) √
+└── g[29](fail->0) √
+```
+
+打印规则: "字符[ID]\(fail->ID)"，如果是完整单词，会在后面出现"√"。
+
+优化过程: 一般fail指针指向的下个节点，仍然不是完整的单词，故一直fail下去，直到找到完整的单词，或到root。优化后可减少Find过程遍历的节点数。
 
 # Usage
 
@@ -136,6 +201,12 @@ func main() {
 	time.Sleep(time.Second)
 }
 ```
+
+# Debug
+
+You can open debug mode by modify file `https://github.com/eachain/aca/blob/master/debug.go` line 99, 'debug' to 'Debug'.
+
+你可以通过修改文件`https://github.com/eachain/aca/blob/master/debug.go`第99行，'debug'改为'Debug'，打开debug模式。
 
 # Contribution
 
