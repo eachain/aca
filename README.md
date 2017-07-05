@@ -116,6 +116,9 @@ For example:
 
 ```go
 func Uniq(words []string) []string {
+    if len(words) == 0 {
+        return words
+    }
 	sort.Strings(words)
 	n := 0
 	for i := 1; i < len(words); i++ {
