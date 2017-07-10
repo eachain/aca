@@ -26,6 +26,10 @@ func (bs byPos) Less(i, j int) bool {
 }
 
 func UnionBlocks(blocks []aca.Block) []aca.Block {
+	if len(blocks) == 0 {
+		return blocks
+	}
+
 	sort.Sort(byPos(blocks))
 	n := 0
 	for i := 1; i < len(blocks); i++ {

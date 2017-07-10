@@ -217,6 +217,3 @@ If you want to participate, you can create an issue or request a 'Pull Request'.
 
 Welcome any and all suggestions.
 
-# License
-
-MIT License
