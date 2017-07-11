@@ -96,7 +96,7 @@ func (v *view) show(w io.Writer, root rune) {
 	v.print(w, root, v.a.root, make([]rune, 0, v.depth))
 }
 
-func (a *ACA) Debug(w ...io.Writer) {
+func (a *ACA) debug(w ...io.Writer) {
 	var writer io.Writer
 	if len(w) == 0 {
 		writer = os.Stdout

@@ -101,15 +101,6 @@ func (a *ACA) Build() {
 				c.fail = a.root
 			}
 		}
-
-		// make it quick fail
-		if n.fail != nil {
-			fail := n.fail
-			for fail != a.root && fail.wordLength == 0 {
-				fail = fail.fail
-			}
-			n.fail = fail
-		}
 	}
 }
 
