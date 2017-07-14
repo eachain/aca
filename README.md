@@ -31,37 +31,37 @@ a.Build()
 a.Debug() // not exported
 ```
 
-Then, this is the trie(after optimised):
+Then, this is the trie:
 
-然后, 这是(优化后的)树:
+然后, 这是整棵树:
 
 ```
 .[0](fail->0)
 ├── a[1](fail->0)
-|   └── b[2](fail->0)
-|       └── c[3](fail->0)
-|           └── d[4](fail->0) √
-|               └── e[5](fail->17)
-|                   ├── f[6](fail->0)
+|   └── b[2](fail->9)
+|       └── c[3](fail->10)
+|           └── d[4](fail->11) √
+|               └── e[5](fail->12)
+|                   ├── f[6](fail->13)
 |                   |   └── g[7](fail->14) √
 |                   └── g[8](fail->29) √
 ├── b[9](fail->0)
-|   └── c[10](fail->0)
-|       └── d[11](fail->0)
+|   └── c[10](fail->15)
+|       └── d[11](fail->16)
 |           └── e[12](fail->17)
-|               └── f[13](fail->0)
+|               └── f[13](fail->18)
 |                   └── g[14](fail->19) √
 ├── c[15](fail->0)
-|   └── d[16](fail->0)
-|       └── e[17](fail->0) √
-|           └── f[18](fail->0)
+|   └── d[16](fail->20)
+|       └── e[17](fail->21) √
+|           └── f[18](fail->22)
 |               └── g[19](fail->23) √
 ├── d[20](fail->0)
-|   └── e[21](fail->0)
-|       └── f[22](fail->0)
+|   └── e[21](fail->24)
+|       └── f[22](fail->25)
 |           └── g[23](fail->26) √
 ├── e[24](fail->0)
-|   └── f[25](fail->0)
+|   └── f[25](fail->27)
 |       └── g[26](fail->28) √
 ├── f[27](fail->0)
 |   └── g[28](fail->29) √
@@ -69,8 +69,6 @@ Then, this is the trie(after optimised):
 ```
 
 打印规则: "字符[ID]\(fail->ID)"，如果是完整单词，会在后面出现"√"。
-
-优化过程: 一般fail指针指向的下个节点，仍然不是完整的单词，故一直fail下去，直到找到完整的单词，或到root。优化后可减少Find过程遍历的节点数。
 
 # Usage
 
