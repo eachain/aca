@@ -2,83 +2,91 @@
 // AC自动机
 package aca
 
-import "unicode/utf8"
+import (
+	"unicode"
+	"unicode/utf8"
+)
 
 type node struct {
-	next       map[rune]*node
-	fail       *node
-	wordLength int
+	next map[rune]*node
+	fail *node
+	word string
+	size int // len([]rune(word))
 }
 
 type ACA struct {
-	root      *node
-	nodeCount int
+	root *node
+	fold bool
 }
 
 // New returns an empty aca.
-func New() *ACA {
-	return &ACA{root: &node{}, nodeCount: 1}
+// equalFold likes strings.EqualFold
+func New(equalFold ...bool) *ACA {
+	fold := false
+	if len(equalFold) > 0 {
+		fold = equalFold[0]
+	}
+	return &ACA{root: &node{}, fold: fold}
 }
 
 // Add adds a new word to aca.
 // After Add, and before Find,
 // MUST Build.
 func (a *ACA) Add(word string) {
+	rs := []rune(word)
 	n := a.root
-	for _, r := range word {
+	for _, r := range rs {
 		if n.next == nil {
 			n.next = make(map[rune]*node)
 		}
+		if a.fold {
+			r = unicode.ToLower(r)
+		}
 		if n.next[r] == nil {
 			n.next[r] = &node{}
-			a.nodeCount++
 		}
 		n = n.next[r]
 	}
-	n.wordLength = len(word)
+	n.word = word
+	n.size = len(rs)
 }
 
 // Del delete a word from aca.
 // After Del, and before Find,
 // MUST Build.
 func (a *ACA) Del(word string) {
-	rs := []rune(word)
-	stack := make([]*node, len(rs))
-	n := a.root
+	a.del(a.root, []rune(word), 0)
+}
 
-	for i, r := range rs {
-		if n.next[r] == nil {
-			return
-		}
-		stack[i] = n
-		n = n.next[r]
-	}
-
-	// if it is NOT the leaf node
-	if len(n.next) > 0 {
-		n.wordLength = 0
+func (a *ACA) del(n *node, rs []rune, i int) {
+	if i >= len(rs) {
+		n.fail = nil
+		n.word = ""
+		n.size = 0
 		return
 	}
 
-	// if it is the leaf node
-	for i := len(rs) - 1; i >= 0; i-- {
-		stack[i].next[rs[i]].next = nil
-		stack[i].next[rs[i]].fail = nil
+	r := rs[i]
+	if a.fold {
+		r = unicode.ToLower(r)
+	}
 
-		delete(stack[i].next, rs[i])
-		a.nodeCount--
-		if len(stack[i].next) > 0 ||
-			stack[i].wordLength > 0 {
-			return
-		}
+	t := n.next[r]
+	if t == nil {
+		return
+	}
+
+	a.del(t, rs, i+1)
+	if t.word == "" && len(t.next) == 0 {
+		delete(n.next, r)
 	}
 }
 
 // Build builds the fail pointer.
 // It MUST be called before Find.
 func (a *ACA) Build() {
-	// allocate enough memory as a queue
-	q := append(make([]*node, 0, a.nodeCount), a.root)
+	// attention: must use queue, cannot build recusively
+	q := []*node{a.root}
 
 	for len(q) > 0 {
 		n := q[0]
@@ -89,8 +97,6 @@ func (a *ACA) Build() {
 
 			p := n.fail
 			for p != nil {
-				// ATTENTION: nil map cannot be writen
-				// but CAN BE READ!!!
 				if p.next[r] != nil {
 					c.fail = p.next[r]
 					break
@@ -104,9 +110,25 @@ func (a *ACA) Build() {
 	}
 }
 
-func (a *ACA) find(s string, cb func(start, end int)) {
+type (
+	MatchFunc   func(i, j int, match string)
+	ExcludeFunc func(r rune) bool
+)
+
+// FindLiteral finds all the matched words contains in s, and skip the rune excluded.
+func (a *ACA) FindLiteral(s string, match MatchFunc, exclude ExcludeFunc) {
+	index := make([]int, 0, len(s))
 	n := a.root
 	for i, r := range s {
+		if exclude != nil && exclude(r) {
+			continue
+		}
+		index = append(index, i)
+
+		if a.fold {
+			r = unicode.ToLower(r)
+		}
+
 		for n.next[r] == nil && n != a.root {
 			n = n.fail
 		}
@@ -116,35 +138,44 @@ func (a *ACA) find(s string, cb func(start, end int)) {
 			continue
 		}
 
-		end := i + utf8.RuneLen(r)
+		rl := utf8.RuneLen(r)
 		for t := n; t != a.root; t = t.fail {
-			if t.wordLength > 0 {
-				cb(end-t.wordLength, end)
+			if t.word != "" {
+				match(index[len(index)-t.size], i+rl, t.word)
 			}
 		}
 	}
 }
 
-// Find finds all the words contains in s.
+// FindExclude finds all the matched words contains in s, and skip the rune excluded.
 // The results may duplicated.
 // It is caller's responsibility to make results unique.
-func (a *ACA) Find(s string) (words []string) {
-	a.find(s, func(start, end int) {
-		words = append(words, s[start:end])
-	})
+func (a *ACA) FindExclude(s string, exclude ExcludeFunc) (matches []string) {
+	a.FindLiteral(s, func(_, _ int, match string) {
+		matches = append(matches, match)
+	}, exclude)
 	return
 }
 
-// Block records the start and end position
-// that words appear, namely s[start:end].
-type Block struct {
-	Start, End int
+// Find finds all the matched words contains in s.
+// The results may duplicated.
+// It is caller's responsibility to make results unique.
+func (a *ACA) Find(s string) []string {
+	return a.FindExclude(s, nil)
 }
 
-// Blocks returns the blocks that words in aca appear.
-func (a *ACA) Blocks(s string) (blocks []Block) {
-	a.find(s, func(start, end int) {
-		blocks = append(blocks, Block{Start: start, End: end})
-	})
+// Block records the low and high position that words appear, namely s[low:high].
+type Block struct {
+	Low     int
+	High    int
+	Literal string // equals to s[low:high]
+	Match   string // match word, if set equalFold or exclude something, the Literal may not equal Match
+}
+
+// FindBlocks returns the blocks that words in aca appear.
+func (a *ACA) FindBlocks(s string, exclude ExcludeFunc) (blocks []Block) {
+	a.FindLiteral(s, func(i, j int, match string) {
+		blocks = append(blocks, Block{Low: i, High: j, Literal: s[i:j], Match: match})
+	}, exclude)
 	return
 }

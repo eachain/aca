@@ -16,11 +16,11 @@ func (bs byPos) Len() int { return len(bs) }
 func (bs byPos) Swap(i, j int) { bs[i], bs[j] = bs[j], bs[i] }
 
 func (bs byPos) Less(i, j int) bool {
-	if bs[i].Start < bs[j].Start {
+	if bs[i].Low < bs[j].Low {
 		return true
 	}
-	if bs[i].Start == bs[j].Start {
-		return bs[i].End < bs[j].End
+	if bs[i].Low == bs[j].Low {
+		return bs[i].High < bs[j].High
 	}
 	return false
 }
@@ -33,9 +33,9 @@ func UnionBlocks(blocks []aca.Block) []aca.Block {
 	sort.Sort(byPos(blocks))
 	n := 0
 	for i := 1; i < len(blocks); i++ {
-		if blocks[i].Start <= blocks[n].End {
-			if blocks[i].End > blocks[n].End {
-				blocks[n].End = blocks[i].End
+		if blocks[i].Low <= blocks[n].Low {
+			if blocks[i].High > blocks[n].High {
+				blocks[n].High = blocks[i].High
 			}
 		} else {
 			n++
@@ -53,11 +53,11 @@ func ReplaceAll(a *aca.ACA, s string, new rune) string {
 
 	now := 0
 	buf := &bytes.Buffer{}
-	for _, b := range UnionBlocks(a.Blocks(s)) {
-		buf.WriteString(s[now:b.Start])
-		cnt := utf8.RuneCountInString(s[b.Start:b.End])
+	for _, b := range UnionBlocks(a.FindBlocks(s, nil)) {
+		buf.WriteString(s[now:b.Low])
+		cnt := utf8.RuneCountInString(s[b.Low:b.High])
 		buf.WriteString(string(tmp[:cnt]))
-		now = b.End
+		now = b.High
 	}
 	if now < len(s) {
 		buf.WriteString(s[now:])
@@ -78,8 +78,13 @@ func ExampleSensitives() {
 	a.Build()
 
 	s := "我fuck你shit up, 艹他奶奶的个球嘞, you这个bitch，就是个傻X!"
-	fmt.Println(a.Find(s))                // prints: [fuck shit 艹 他奶奶的 bitch 傻X]
-	fmt.Println(a.Blocks(s))              // prints: [{3 7} {10 14} {19 22} {22 34} {54 59} {71 75}]
-	fmt.Println(UnionBlocks(a.Blocks(s))) // prints: [{3 7} {10 14} {19 34} {54 59} {71 75}]
-	fmt.Println(ReplaceAll(a, s, '*'))    // prints: 我****你**** up, *****个球嘞, you这个*****，就是个**!
+	fmt.Println(a.Find(s))
+	fmt.Println(a.FindBlocks(s, nil))
+	fmt.Println(UnionBlocks(a.FindBlocks(s, nil)))
+	fmt.Println(ReplaceAll(a, s, '*'))
+	// Output:
+	// [fuck shit 艹 他奶奶的 bitch 傻X]
+	// [{3 7 fuck fuck} {10 14 shit shit} {19 22 艹 艹} {22 34 他奶奶的 他奶奶的} {54 59 bitch bitch} {71 75 傻X 傻X}]
+	// [{3 7 fuck fuck} {10 14 shit shit} {19 22 艹 艹} {22 34 他奶奶的 他奶奶的} {54 59 bitch bitch} {71 75 傻X 傻X}]
+	// 我****你**** up, *****个球嘞, you这个*****，就是个**!
 }

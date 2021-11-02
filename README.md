@@ -28,7 +28,7 @@ a.Add("fg")
 a.Add("g")
 a.Add("abcdeg")
 a.Build()
-a.Debug() // not exported
+a.Debug()
 ```
 
 Then, this is the trie:

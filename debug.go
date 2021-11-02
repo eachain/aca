@@ -63,7 +63,7 @@ func (v *view) nodestr(r rune, n *node) string {
 	s := fmt.Sprintf("\033[36m%c\033[0m"+
 		"[\033[32m%v\033[0m](fail->\033[33m%v\033[0m)",
 		r, v.nodeid[n], v.nodeid[n.fail])
-	if n.wordLength > 0 { // a complete word
+	if n.word != "" { // a complete word
 		s += " \033[31m√\033[0m"
 	}
 	return s
@@ -96,7 +96,7 @@ func (v *view) show(w io.Writer, root rune) {
 	v.print(w, root, v.a.root, make([]rune, 0, v.depth))
 }
 
-func (a *ACA) debug(w ...io.Writer) {
+func (a *ACA) Debug(w ...io.Writer) {
 	var writer io.Writer
 	if len(w) == 0 {
 		writer = os.Stdout
