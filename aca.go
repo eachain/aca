@@ -129,18 +129,24 @@ func (a *ACA) FindLiteral(s string, match MatchFunc, exclude ExcludeFunc) {
 			r = unicode.ToLower(r)
 		}
 
-		for n.next[r] == nil && n != a.root {
+		for n != nil {
+			if t := n.next[r]; t != nil {
+				n = t
+				break
+			}
 			n = n.fail
 		}
-		n = n.next[r]
 		if n == nil {
 			n = a.root
 			continue
 		}
 
-		rl := utf8.RuneLen(r)
+		var rl int
 		for t := n; t != a.root; t = t.fail {
 			if t.word != "" {
+				if rl == 0 {
+					rl = utf8.RuneLen(r)
+				}
 				match(index[len(index)-t.size], i+rl, t.word)
 			}
 		}
