@@ -60,9 +60,11 @@ func newView(a *ACA, remain, last rune) *view {
 }
 
 func (v *view) nodestr(r rune, n *node) string {
-	s := fmt.Sprintf("\033[36m%c\033[0m"+
-		"[\033[32m%v\033[0m](fail->\033[33m%v\033[0m)",
-		r, v.nodeid[n], v.nodeid[n.fail])
+	s := fmt.Sprintf("\033[36m%c\033[0m[\033[32m%v\033[0m]",
+		r, v.nodeid[n])
+	if n.fail != nil {
+		s += fmt.Sprintf("(fail->\033[33m%v\033[0m)", v.nodeid[n.fail])
+	}
 	if n.word != "" { // a complete word
 		s += " \033[31m√\033[0m"
 	}
@@ -106,4 +108,8 @@ func (a *ACA) Debug(w ...io.Writer) {
 		writer = io.MultiWriter(w...)
 	}
 	newView(a, '├', '└').show(writer, '.')
+}
+
+func (a *DFA) Debug(w ...io.Writer) {
+	(*ACA)(a).Debug(w...)
 }
