@@ -203,12 +203,6 @@ func main() {
 }
 ```
 
-# Debug
-
-You can open debug mode by modify file `https://github.com/eachain/aca/blob/master/debug.go` line 99, 'debug' to 'Debug'.
-
-你可以通过修改文件`https://github.com/eachain/aca/blob/master/debug.go`第99行，'debug'改为'Debug'，打开debug模式。
-
 # Contribution
 
 If you want to participate, you can create an issue or request a 'Pull Request'.
